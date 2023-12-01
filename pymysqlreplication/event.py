@@ -4,6 +4,7 @@ import datetime
 import decimal
 import zlib
 import logging
+import json
 
 from pymysqlreplication.constants.STATUS_VAR_KEY import *
 from pymysqlreplication.exceptions import StatusVariableMismatch
@@ -77,14 +78,14 @@ class BinLogEvent(object):
 
     def dump(self):
         print(f"=== {self.__class__.__name__} ===")
-        print(f"Date: {datetime.datetime.utcfromtimestamp(self.timestamp).isoformat()}")
-        print(f"Log position: {self.packet.log_pos}")
-        print(f"Event size: {self.event_size}")
-        print(f"Read bytes: {self.packet.read_bytes}")
-        self._dump()
+        print(self._to_json())
         print()
 
     def _dump(self):
+        """Core data dumped for the event"""
+        pass
+    
+    def _to_json(self):
         """Core data dumped for the event"""
         pass
 
@@ -133,12 +134,14 @@ class GtidEvent(BinLogEvent):
         )
         return gtid
 
-    def _dump(self):
-        print(f"Commit: {self.commit_flag}")
-        print(f"GTID_NEXT: {self.gtid}")
+    def _to_json(self):
+        result = super().to_dictionary()
+
         if hasattr(self, "last_committed"):
-            print(f"last_committed: {self.last_committed}")
-            print(f"sequence_number: {self.sequence_number}")
+            result["last_committed"] = self.last_committed
+            result["sequence_number"] = self.sequence_number
+
+        return json.dumps(result)
 
     def __repr__(self):
         return f'<GtidEvent "{self.gtid}">'
