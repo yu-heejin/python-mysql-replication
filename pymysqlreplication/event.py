@@ -67,6 +67,14 @@ class BinLogEvent(object):
         self.packet.read_bytes -= 19 + self.event_size + 4
         self.packet.rewind(20)
 
+    def to_dictionary(self):
+        return {
+            "Date": datetime.datetime.utcfromtimestamp(self.timestamp).isoformat(),
+            "Log position": self.packet.log_pos,
+            "Event size": self.event_size,
+            "Read bytes": self.packet.read_bytes
+        }
+
     def dump(self):
         print(f"=== {self.__class__.__name__} ===")
         print(f"Date: {datetime.datetime.utcfromtimestamp(self.timestamp).isoformat()}")
